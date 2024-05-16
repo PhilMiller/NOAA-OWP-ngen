@@ -68,23 +68,26 @@ double UnitsHelper::get_converted_value(const std::string &in_units, const doubl
     return r;
 }
 
-double* UnitsHelper::convert_values(const std::string &in_units, double* in_values, const std::string &out_units, double* out_values, const size_t& count)
+void UnitsHelper::convert_values(const std::string &in_units, boost::span<double> in_values, const std::string &out_units, boost::span<double> out_values)
 {
-    if(in_units == out_units){
+    if (in_values.size() != out_values.size()) {
+        throw std::runtime_error("Mismatched span sizes in unit conversion");
+    }
+    auto count = in_values.size();
+
+    if (in_units == out_units) {
         // Early-out optimization
-        if(in_values == out_values){
-            return in_values;
+        if(in_values.data() == out_values.data()) {
+            return;
         } else {
-            memcpy(out_values, in_values, sizeof(double)*count);
-            return out_values;
+            memcpy(out_values.data(), in_values.data(), sizeof(double)*count);
+            return;
         }
     }
+
     std::call_once(unit_system_inited, init_unit_system);
-    
+
     auto converter = get_converter(in_units, out_units);
-
-    cv_convert_doubles(converter.get(), in_values, count, out_values);
-
-    return out_values;
+    cv_convert_doubles(converter.get(), in_values.data(), count, out_values.data());
 }
 

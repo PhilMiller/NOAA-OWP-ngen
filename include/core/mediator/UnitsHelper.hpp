@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <boost/core/span.hpp>
 #include "all.h"
 
 class UnitsHelper {
@@ -29,7 +30,7 @@ class UnitsHelper {
 
     static double get_converted_value(const std::string &in_units, const double &value, const std::string &out_units);
 
-    static double* convert_values(const std::string &in_units, double* values, const std::string &out_units, double* out_values, const size_t & count);
+    static void convert_values(const std::string &in_units, boost::span<double> in_values, const std::string &out_units, boost::span<double> out_values);
 
     private:
      

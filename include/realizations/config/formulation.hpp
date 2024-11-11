@@ -77,6 +77,7 @@ namespace realization{
      *                model params
      */
     void link_external(geojson::Feature feature){
+        std::stringstream ss;
 
         if(type == "bmi_multi"){
             std::vector<geojson::JSONProperty> tmp;
@@ -130,8 +131,9 @@ namespace realization{
                     case geojson::PropertyType::Object:
                         // TODO: Should list/object values be passed to model parameters?
                         //       Typically, feature properties *should* be scalars.
-                        std::cerr << "WARNING: property type " << static_cast<int>(catchment_attribute.get_type()) << " not allowed as model parameter. "
+                        ss  << "WARNING: property type " << static_cast<int>(catchment_attribute.get_type()) << " not allowed as model parameter. "
                                     << "Must be one of: Natural (int), Real (double), Boolean, or String" << '\n';
+                        LOG(ss.str(), LogLevel::WARN); ss.str("");
                         break;
                     default:
                         attr.at(param.first) = geojson::JSONProperty(param.first, catchment_attribute);

@@ -65,6 +65,8 @@ namespace realization{
         if (mpi_rank == 0)
         #endif
         {
+            std::string propStr = geojson::JSONProperty::print_property(parameters.at("modules"));
+            LOG(propStr, LogLevel::DEBUG);
             geojson::JSONProperty::print_property(parameters.at("modules"));
         }
       }

@@ -83,7 +83,7 @@ namespace realization {
 
                 if (!possible_simulation_time) {
                     std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
                 config::Time time = config::Time(*possible_simulation_time);
@@ -152,7 +152,7 @@ namespace realization {
                     using_routing = false;
                     ss <<"WARNING: Formulation Manager found routing configuration"
                              <<", but routing support isn't enabled. No routing will occur."<<std::endl;
-                    LOG(ss.str(), LogLevel::WARN); ss.str("");
+                    LOG(ss.str(), LogLevel::SEVERE); ss.str("");
                 #endif //NGEN_WITH_ROUTING
                  }
 
@@ -178,7 +178,7 @@ namespace realization {
                           ss <<"WARNING Formulation_Manager::read: Cannot create formulation for catchment "
                                   <<catchment_config.first
                                   <<" that isn't identified in the hydrofabric or requested subset"<<std::endl;
-                          LOG(ss.str(), LogLevel::WARN); ss.str("");
+                          LOG(ss.str(), LogLevel::SEVERE); ss.str("");
                           #endif
                           continue;
                       }
@@ -186,7 +186,7 @@ namespace realization {
 
                       if(!catchment_formulation.has_formulation()){
                         std::string throw_msg; throw_msg.assign("ERROR: No formulations defined for "+catchment_config.first+".");
-                        LOG(throw_msg, LogLevel::ERROR);
+                        LOG(throw_msg, LogLevel::WARNING);
                         throw std::runtime_error(throw_msg);
                       }
                       // Parse catchment-specific model_params
@@ -396,13 +396,13 @@ namespace realization {
                 if(!formulation_exists(catchment_formulation.formulation.type)){
                     std::string throw_msg; throw_msg.assign("Catchment " + identifier + " failed initialization: '" +
                             catchment_formulation.formulation.type + "' is not a valid formulation. Options are: "+valid_formulation_keys());
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
 
                 if(catchment_formulation.forcing.parameters.empty()){
                     std::string throw_msg; throw_msg.assign("No forcing definition was found for " + identifier);
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
 
@@ -424,7 +424,7 @@ namespace realization {
                     }
                     
                     std::string throw_msg; throw_msg.assign(message);
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
 
@@ -484,7 +484,7 @@ namespace realization {
                 if (path.empty()) {
                     std::string throw_msg; throw_msg.assign("Error with NGEN config - 'path' in forcing params must be set to a "
                                              "non-empty parent directory path when 'file_pattern' is used.");
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
 
@@ -579,7 +579,7 @@ namespace realization {
                                 struct stat st;
                                 if( stat((path+entry->d_name).c_str(), &st) != 0) {
                                     std::string throw_msg; throw_msg.assign("Could not stat file "+path+entry->d_name);
-                                    LOG(throw_msg, LogLevel::ERROR);
+                                    LOG(throw_msg, LogLevel::WARNING);
                                     throw std::runtime_error(throw_msg);
                                 }
                                 if( S_ISREG(st.st_mode) ) {
@@ -594,7 +594,7 @@ namespace realization {
                                 }
                                 //std::string throw_msg; throw_msg.assign("Forcing data is path "+path+entry->d_name+" is not a file");
                                 std::string throw_msg; throw_msg.assign("Forcing data is path "+path+entry->d_name+" is not a file");
-                                LOG(throw_msg, LogLevel::ERROR);
+                                LOG(throw_msg, LogLevel::WARNING);
                                 throw std::runtime_error(throw_msg);
                             }
                         } //no match found, try next entry
@@ -603,14 +603,14 @@ namespace realization {
                 else {
                     // The directory wasn't found or otherwise couldn't be opened; forcing data cannot be retrieved
                     std::string throw_msg; throw_msg.assign("Error opening forcing data dir '" + path + "' after " + std::to_string(attemptCount) + " attempts: " + errMsg);
-                    LOG(throw_msg, LogLevel::ERROR);
+                    LOG(throw_msg, LogLevel::WARNING);
                     throw std::runtime_error(throw_msg);
                 }
 
                 closedir(directory);
 
                 std::string throw_msg; throw_msg.assign("Forcing data could not be found for '" + identifier + "'");
-                LOG(throw_msg, LogLevel::ERROR);
+                LOG(throw_msg, LogLevel::WARNING);
                 throw std::runtime_error(throw_msg);
             }
 
@@ -662,7 +662,7 @@ namespace realization {
                             default:
                                 ss  << "WARNING: property type " << static_cast<int>(catchment_attribute.get_type()) << " not allowed as model parameter. "
                                           << "Must be one of: Natural (int), Real (double), Boolean, or String" << '\n';
-                                LOG(ss.str(), LogLevel::WARN); ss.str("");
+                                LOG(ss.str(), LogLevel::SEVERE); ss.str("");
                                 break;
                         }
                     } else {
@@ -670,7 +670,7 @@ namespace realization {
                                   << catchment_feature->get_id()
                                   << "` does not contain the property `"
                                   << param_name << "`\n";
-                        LOG(ss.str(), LogLevel::WARN); ss.str("");
+                        LOG(ss.str(), LogLevel::SEVERE); ss.str("");
                     }
                 }
 
@@ -734,7 +734,7 @@ namespace realization {
                                 //       Typically, feature properties *should* be scalars.
                                 ss  << "WARNING: property type " << static_cast<int>(catchment_attribute.get_type()) << " not allowed as model parameter. "
                                           << "Must be one of: Natural (int), Real (double), Boolean, or String" << '\n';
-                                LOG(ss.str(), LogLevel::WARN); ss.str("");
+                                LOG(ss.str(), LogLevel::SEVERE); ss.str("");
                                 break;
                         }
                     }

@@ -43,36 +43,68 @@ namespace realization {
         forcing_params &forcing_config,
         utils::StreamHandler output_stream
     ) {
-        constructor formulation_constructor = formulations.at(formulation_type);
-        std::shared_ptr<data_access::GenericDataProvider> fp;
-        if (forcing_config.provider == "CsvPerFeature" || forcing_config.provider == ""){
-            fp = std::make_shared<CsvPerFeatureForcingProvider>(forcing_config);
+        try {
+            constructor formulation_constructor = formulations.at(formulation_type);
+
+            // Log the forcing configuration being used
+            std::cout << "[DEBUG] Forcing path: " << forcing_config.path << std::endl;
+            std::cout << "[DEBUG] Forcing provider: " << forcing_config.provider << std::endl;
+            std::cout << "[DEBUG] Forcing simulation start time: " << forcing_config.simulation_start_t << std::endl;
+            std::cout << "[DEBUG] Forcing simulation end time: " << forcing_config.simulation_end_t << std::endl;
+
+            std::shared_ptr<data_access::GenericDataProvider> fp;
+            if (forcing_config.provider == "CsvPerFeature" || forcing_config.provider.empty()) {
+                std::cout << "[DEBUG] Using CsvPerFeatureForcingProvider for identifier: " << identifier << std::endl;
+                fp = std::make_shared<CsvPerFeatureForcingProvider>(forcing_config);
+            }
+    #if NGEN_WITH_NETCDF
+            else if (forcing_config.provider == "NetCDF") {
+                std::cout << "[DEBUG] Using NetCDFPerFeatureDataProvider for identifier: " << identifier << std::endl;
+                // Note: The stream mechanics of the formulations and formulation manager are
+                // are strictly speaking indepdent of the log output stream here.  The "default" output
+                // stream likely coming into this function is the null stream, but we don't want to force the forcing provider 
+                // to also use the null stream for any logging it may do, 
+                // so we use the standard output stream for the forcing provider by default.
+                // TODO: this likely needs to be rethought and refactored, but for now, 
+                // this allows the NetCDF provider to log to standard output while still allowing
+                // formulations to log to their own output streams as needed.
+                fp = data_access::NetCDFPerFeatureDataProvider::get_shared_provider(forcing_config.path, forcing_config.simulation_start_t, forcing_config.simulation_end_t, utils::getStdOut());
+            }
+    #endif
+            else if (forcing_config.provider == "NullForcingProvider") {
+                std::cout << "[DEBUG] Using NullForcingProvider for identifier: " << identifier << std::endl;
+                fp = std::make_shared<NullForcingProvider>();
+            }
+            else { // Some unknown string in the provider field?
+                std::string throw_msg;
+                throw_msg.assign(
+                        "Invalid formulation forcing provider configuration! identifier: \"" + identifier +
+                        "\", formulation_type: \"" + formulation_type +
+                        "\", provider: \"" + forcing_config.provider + "\"");
+                LOG(throw_msg, LogLevel::WARNING);
+                std::cout << "[ERROR] " << throw_msg << std::endl;
+                throw std::runtime_error(throw_msg);
+            }
+
+            // Log before calling the formulation constructor
+            std::cout << "[DEBUG] Creating formulation for identifier: " << identifier
+                      << ", type: " << formulation_type << std::endl;
+            auto formulation = formulation_constructor(identifier, fp, output_stream);
+//            std::cout << "[DEBUG] Formulation created successfully for identifier: " << identifier << std::endl;
+            return formulation;
         }
-#if NGEN_WITH_NETCDF
-        else if (forcing_config.provider == "NetCDF"){
-            // Note: The stream mechanics of the formulations and formulation manager are
-            // are strictly speaking indepdent of the log output stream here.  The "default" output
-            // stream likely coming into this function is the null stream, but we don't want to force the forcing provider 
-            // to also use the null stream for any logging it may do, 
-            // so we use the standard output stream for the forcing provider by default.
-            // TODO: this likely needs to be rethought and refactored, but for now, 
-            // this allows the NetCDF provider to log to standard output while still allowing
-            // formulations to log to their own output streams as needed.
-            fp = data_access::NetCDFPerFeatureDataProvider::get_shared_provider(forcing_config.path, forcing_config.simulation_start_t, forcing_config.simulation_end_t, utils::getStdOut());
-        }
-#endif
-        else if (forcing_config.provider == "NullForcingProvider"){
-            fp = std::make_shared<NullForcingProvider>();
-        }
-        else { // Some unknown string in the provider field?
-            std::string throw_msg; throw_msg.assign(
-                    "Invalid formulation forcing provider configuration! identifier: \"" + identifier +
-                    "\", formulation_type: \"" + formulation_type +
-                    "\", provider: \"" + forcing_config.provider + "\"");
+        catch (const std::out_of_range &e) {
+            std::string throw_msg = "No known formulation type '" + formulation_type + "' for identifier '" + identifier + "'";
             LOG(throw_msg, LogLevel::WARNING);
+            std::cout << "[ERROR] " << throw_msg << std::endl;
             throw std::runtime_error(throw_msg);
         }
-        return formulation_constructor(identifier, fp, output_stream);
+        catch (const std::exception &e) {
+            std::string throw_msg = "Error constructing formulation for identifier '" + identifier + "': " + e.what();
+            LOG(throw_msg, LogLevel::WARNING);
+            std::cout << "[ERROR] " << throw_msg << std::endl;
+            throw;
+        }
     }
 
     static std::string get_formulation_key(const boost::property_tree::ptree &tree) {

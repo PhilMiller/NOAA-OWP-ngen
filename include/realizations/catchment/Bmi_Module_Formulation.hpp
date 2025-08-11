@@ -8,6 +8,7 @@
 #include <DataProvider.hpp>
 #include "bmi_utilities.hpp"
 #include "bmi/protocols.hpp"
+#include <utilities/StateSaving.hpp>
 
 using data_access::MEAN;
 using data_access::SUM;
@@ -45,6 +46,8 @@ namespace realization {
         void create_formulation(boost::property_tree::ptree &config, geojson::PropertyMap *global = nullptr) override;
         void create_formulation(geojson::PropertyMap properties) override;
 
+        void save_state(std::shared_ptr<Saver> saver) const;
+        
         /**
          * Get the collection of forcing output property names this instance can provide.
          *

@@ -9,6 +9,8 @@
 #include "bmi_utilities.hpp"
 #include "bmi/protocols.hpp"
 
+#include <boost/core/span.hpp>
+
 using data_access::MEAN;
 using data_access::SUM;
 
@@ -256,6 +258,10 @@ namespace realization {
             models::bmi::protocols::Context ctx{iteration, total_steps, timestamp, id};
             bmi_protocols.run(models::bmi::protocols::Protocol::MASS_BALANCE, ctx);
         }
+
+        const boost::span<char> get_serialization_state() const;
+        void load_serialization_state(const boost::span<char> state) const;
+        void free_serialization_state() const;
 
     protected:
 

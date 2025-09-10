@@ -517,6 +517,7 @@ int main(int argc, char* argv[])
     // Store the sentinels separately to avoid iterator invalidation
     // from inserting them eagerly
     std::vector<std::shared_ptr<geojson::FeatureBase>> sentinels;
+
     for (auto& feature : *global_nexus_collection)
     {
         auto id = feature->get_id();
@@ -527,9 +528,11 @@ int main(int argc, char* argv[])
                 geojson::Feature sentinel_feature = std::make_shared<geojson::SentinelFeature>(sentinel_id);
                 sentinels.push_back(sentinel_feature);
                 feature->add_destination_feature(sentinel_feature.get());
+                LOG("Nexus " + feature->get_id() + " has no destination features; adding " + sentinel_id + " below it", LogLevel::INFO);
             }
         }
     }
+
     for (auto& sentinel : sentinels)
     {
         global_nexus_collection->add_feature(sentinel);

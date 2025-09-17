@@ -353,13 +353,9 @@ target_link_libraries(ngen
         NGen::bmi_protocols
         NGen::output
         NGen::parallel
-<<<<<<< HEAD
         NGen::state_save_restore
         NGen::bmi_protocols
         NGen::state_save_restore
-=======
-        NGen::bmi_protocols
->>>>>>> fec0747c8 (Merge remote-tracking branch 'NOAA-OWP/master' into development)
 )
 
 if(NGEN_WITH_SQLITE)

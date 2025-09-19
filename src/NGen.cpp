@@ -529,24 +529,38 @@ int main(int argc, char *argv[]) {
       auto& desc = layer_meta_data.get_layer(keys[i]);
       std::vector<std::string> cat_ids;
 
-      // make a new simulation time object with a different output interval
-      Simulation_Time sim_time(*manager->Simulation_Time_Object, time_steps[i]);
-      if( manager->has_domain_formulation(keys[i])){
-        //create a domain wide layer
-        auto formulation = manager->get_domain_formulation(keys[i]);
-        layers[i] = std::make_shared<ngen::DomainLayer>(desc, sim_time, features, 0, formulation);
-      }
-      else{
-        for ( std::string id : features.catchments(keys[i]) ) { cat_ids.push_back(id); }
-        if (keys[i] != 0 )
-        {
-          layers[i] = std::make_shared<ngen::Layer>(desc, cat_ids, sim_time, features, catchment_collection, 0);
+        // make a new simulation time object with a different output interval
+        Simulation_Time sim_time(*manager->Simulation_Time_Object, time_steps[i]);
+        if (manager->has_domain_formulation(keys[i])) {
+            // create a domain wide layer
+            auto formulation = manager->get_domain_formulation(keys[i]);
+            layers[i] =
+                std::make_shared<ngen::DomainLayer>(desc, sim_time, features, 0, formulation);
+        } else {
+            for (std::string id : features.catchments(keys[i])) {
+                cat_ids.push_back(id);
+            }
+            if (keys[i] != 0) {
+                layers[i] = std::make_shared<ngen::Layer>(
+                    desc,
+                    cat_ids,
+                    sim_time,
+                    features,
+                    catchment_collection,
+                    0
+                );
+            } else {
+                layers[i] = std::make_shared<ngen::SurfaceLayer>(
+                    desc,
+                    cat_ids,
+                    sim_time,
+                    features,
+                    catchment_collection,
+                    0,
+                    nexus_outputs_mgr
+                );
+            }
         }
-        else
-        {
-          layers[i] = std::make_shared<ngen::SurfaceLayer>(desc, cat_ids, sim_time, features, catchment_collection, 0, nexus_subset_ids, nexus_outputs_mgr);
-        }
-      }
 
     }
 

@@ -681,7 +681,6 @@ int main(int argc, char* argv[]) {
                     features,
                     catchment_collection,
                     0,
-                    nexus_subset_ids,
                     nexus_outputst_mgr
                 );
             }

@@ -569,12 +569,26 @@ int main(int argc, char *argv[]) {
     auto time_done_init = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_elapsed_init = time_done_init - time_start;
 
+    LOG("[TIMING]: Init: " + std::to_string(time_elapsed_init.count()), LogLevel::INFO);
+
+    // Now loop some time, iterate catchments, do stuff for total number of output times
+    auto num_times = manager->Simulation_Time_Object->get_total_output_times();
+
+    // T-ROUTE data storage
+    std::unordered_map<std::string, int> catchment_indexes;
+#if NGEN_WITH_ROUTING
+    size_t catchment_collection_size = catchment_collection->get_size();
+    for (int i = 0; i < catchment_collection_size; ++i) {
+        auto feature = catchment_collection->get_feature(i);
+        std::string feature_id = feature->get_id();
+        catchment_indexes[feature_id] = i;
+    }
+#endif // NGEN_WITH_ROUTING
+
     auto simulation = std::make_unique<NgenSimulation>(manager,
                                                        layers,
                                                        catchment_indexes,
-                                                       catchment_outflows,
-                                                       nexus_indexes,
-                                                       nexus_downstream_flows);
+                                                       nexus_indexes);
 
     // Currently breaks routing data transfer; will move routing down into this
     simulation->run_catchments();

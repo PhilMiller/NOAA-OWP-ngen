@@ -827,7 +827,7 @@ int main(int argc, char* argv[]) {
                 // if this process has the id, copy the values to the buffer
                 int nexus_index = nexus_indexes[nexus_id];
                 for (int step = 0; step < number_of_timesteps; ++step) {
-                    int offset = step * number_of_timesteps + nexus_index;
+                    int offset = step * nexus_indexes.size() + nexus_index;
                     local_buffer[step] = nexus_downstream_flows[offset];
                 }
             } else {
@@ -839,7 +839,7 @@ int main(int argc, char* argv[]) {
                 // copy reduce values to a combined downflows vector
                 all_nexus_indexes[nexus_id] = i;
                 for (int step = 0; step < number_of_timesteps; ++step) {
-                    int offset = step * number_of_timesteps + i;
+                    int offset = step * all_nexus_ids.size() + i;
                     all_nexus_downflows[offset] = receive_buffer[step];
                     receive_buffer[step] = 0.0;
                 }

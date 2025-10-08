@@ -138,6 +138,9 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
         set_output_variable_names(modules.back()->get_output_variable_names());
     }
 
+    std::stringstream ss_test;
+    ss_test << "Number of output variable names " << get_output_variable_names().size() << std::endl;
+    LOG(ss_test.str(), LogLevel::INFO); ss_test.str("");
     // TODO: consider warning if nested module formulations have formulation output variables, as that level of the
     //  config is (at present) going to be ignored (though strictly speaking, this doesn't apply to the last module in
     //  a certain case).

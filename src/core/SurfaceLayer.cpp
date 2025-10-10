@@ -40,10 +40,8 @@ void ngen::SurfaceLayer::update_models()
     for(const auto& id : features.nexuses()) 
     {
         #if NGEN_WITH_MPI
-        if (features.is_remote_sender_nexus(id)) {
-            //Ensures only one side of the dual sided remote nexus actually doing this...
-            continue;
-        }
+        //Ensures only one side of the dual sided remote nexus actually doing this...
+        if (features.is_remote_sender_nexus(id)) continue;
         #endif
 
         //Get the correct "requesting" id for downstream_flow
@@ -65,6 +63,7 @@ void ngen::SurfaceLayer::update_models()
         //nexus_outputs_mgr->receive_data_entry(form_id, id, current_time_index, current_timestamp, contribution_at_t);
         nexus_outputs_mgr->receive_data_entry(id, current_time_marker, contribution_at_t);
 
+        //std::cout<<"\tNexus "<<id<<" has "<<contribution_at_t<<" m^3/s"<<std::endl;
     } //done nexuses
     nexus_outputs_mgr->commit_writes();
 }

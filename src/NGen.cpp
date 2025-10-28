@@ -58,8 +58,6 @@ int mpi_num_procs;
 #include <Layer.hpp>
 #include <SurfaceLayer.hpp>
 
-std::stringstream ss("");
-
 #include "utilities/output/NexusOutputsMgr.hpp"
 #include "utilities/output/PerNexusCsvOutputMgr.hpp"
 #if NGEN_WITH_NETCDF
@@ -147,6 +145,7 @@ int main(int argc, char* argv[]) {
     std::string REALIZATION_CONFIG_PATH   = "";
     bool is_subdivided_hydrofabric_wanted = false;
     std::string PARTITION_PATH = "";
+    std::stringstream ss("");
 
     if (argc > 1 && std::string{argv[1]} == "--info") {
 #if NGEN_WITH_MPI

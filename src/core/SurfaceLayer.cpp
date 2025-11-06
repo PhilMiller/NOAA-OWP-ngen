@@ -37,10 +37,7 @@ void ngen::SurfaceLayer::update_models(boost::span<double> catchment_outflows,
     // Once contributing catchments are updated for this timestep, dump the nexus output
     for(const auto& id : features.nexuses()) 
     {
-        #if NGEN_WITH_MPI
-        // Ensures only one side of the dual sided remote nexus actually does this
-        if (features.is_remote_sender_nexus(id)) continue;
-        #endif
+        std::string current_timestamp = simulation_time.get_timestamp(current_time_index);
 
         // Get the correct "requesting" id for downstream_flow
         const auto& nexus = features.nexus_at(id);

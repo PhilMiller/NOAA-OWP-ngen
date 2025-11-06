@@ -61,6 +61,10 @@ void ngen::SurfaceLayer::update_models(boost::span<double> catchment_outflows,
 
         //std::cerr << "Requesting water from nexus, id = " << id << " at time = " <<current_time_index << ",  percent = 100, destination = " << cat_id << std::endl;
         double contribution_at_t = features.nexus_at(id)->get_downstream_flow(cat_id, current_time_index, 100.0);
+
+        int nexus_index = nexus_indexes[id];
+        nexus_downstream_flows[nexus_index] += contribution_at_t;
+
         // TODO: (later) eventually may want to use this form, if we support multiple formulations per catchment
         //nexus_outputs_mgr->receive_data_entry(form_id, id, current_time_index, current_timestamp, contribution_at_t);
         nexus_outputs_mgr->receive_data_entry(id, current_time_marker, contribution_at_t);

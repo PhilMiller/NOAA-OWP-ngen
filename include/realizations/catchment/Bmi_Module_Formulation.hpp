@@ -254,6 +254,7 @@ namespace realization {
 
         const std::vector<std::string> get_bmi_input_variables() const override;
         const std::vector<std::string> get_bmi_output_variables() const override;
+        const std::string get_bmi_native_units(const std::string &name) const override;
 
         virtual void check_mass_balance(const int& iteration, const int& total_steps, const std::string& timestamp) const override {
             //Create the protocol context, each member is const, and cannot change during the check
@@ -265,7 +266,7 @@ namespace realization {
         void load_serialization_state(const boost::span<char> state) const;
         void free_serialization_state() const;
         void set_realization_file_format(bool is_legacy_format);
-
+        
     protected:
 
         /**

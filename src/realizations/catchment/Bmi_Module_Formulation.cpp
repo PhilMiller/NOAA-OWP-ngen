@@ -1,6 +1,7 @@
 #include "Bmi_Module_Formulation.hpp"
 #include "utilities/logging_utils.h"
 #include <UnitsHelper.hpp>
+#include <state_save_restore/State_Save_Restore.hpp>
 
 namespace realization {
         void Bmi_Module_Formulation::create_formulation(boost::property_tree::ptree &config, geojson::PropertyMap *global) {
@@ -12,7 +13,7 @@ namespace realization {
             inner_create_formulation(properties, true);
         }
 
-        void Bmi_Module_Formulation::save_state(std::shared_ptr<UnitSaver> saver) const {
+        void Bmi_Module_Formulation::save_state(std::shared_ptr<State_Snapshot_Saver> saver) const {
             auto model = get_bmi_model();
 
             size_t size = 1;
@@ -22,7 +23,10 @@ namespace realization {
             auto serialization_state = static_cast<char const*>(model->GetValuePtr("serialization_state"));
             boost::span<const char> data(serialization_state, size);
 
-            saver->save(data);
+            // Rely on Formulation_Manager also using this->get_id()
+            // as a unique key for the individual catchment
+            // formulations
+            saver->save_unit(this->get_id(), data);
 
             model->SetValue("serialization_free", &size);
         }

@@ -254,7 +254,7 @@ namespace realization {
 
         const std::vector<std::string> get_bmi_input_variables() const override;
         const std::vector<std::string> get_bmi_output_variables() const override;
-        const std::string get_bmi_native_units(const std::string &name) override;
+        const std::string get_bmi_native_units(const std::string &name) const override;
 
         virtual void check_mass_balance(const int& iteration, const int& total_steps, const std::string& timestamp) const override {
             //Create the protocol context, each member is const, and cannot change during the check
@@ -275,7 +275,7 @@ namespace realization {
          * @param name
          * @param bmi_var_name
          */
-        void get_bmi_output_var_name(const std::string &name, std::string &bmi_var_name);
+        void get_bmi_output_var_name(const std::string &name, std::string &bmi_var_name) const;
 
         /**
          * Construct model and its shared pointer, potentially supplying input variable values from config.

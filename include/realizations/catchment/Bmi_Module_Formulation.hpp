@@ -271,7 +271,7 @@ namespace realization {
         void load_serialization_state(const boost::span<char> state) const;
         void free_serialization_state() const;
         void set_realization_file_format(bool is_legacy_format);
-                
+
     protected:
 
         /**

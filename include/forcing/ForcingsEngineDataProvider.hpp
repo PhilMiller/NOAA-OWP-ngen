@@ -115,7 +115,7 @@ struct ForcingsEngineDataProvider
         if(iter != var_output_units_map_.end()){
             return iter->second;
         }
-        std::string throw_msg; 
+        std::string throw_msg;
         throw_msg.assign("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
         LOG(throw_msg, LogLevel::WARNING);
         throw std::runtime_error(throw_msg);
@@ -207,7 +207,7 @@ struct ForcingsEngineDataProvider
             var_output_names_ = bmi_->GetOutputVarNames();
             for (const std::string &output_var_name : var_output_names_) {
                 var_output_units_map_[output_var_name] = bmi_->GetVarUnits(output_var_name);
-            } 
+            }
             if (Logger::GetLogger()->GetLogLevel() == LogLevel::DEBUG) {
                 ss.str(""); ss << "BMI instance initialized successfully" << std::endl;
                 LOG(LogLevel::DEBUG, ss.str());

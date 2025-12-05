@@ -241,8 +241,6 @@ namespace realization {
             return output_variable_units;
         }
 
-        virtual const std::string get_bmi_native_units(const std::string &name) const = 0;
-
     protected:
 
         /** Object to help with converting numeric output values to text. */

@@ -266,8 +266,7 @@ namespace realization {
         }
 
         void set_realization_file_format(bool is_legacy_format);
-        void set_variable_map_availability(bool is_variable_map_available);
-
+                
     protected:
 
         /**
@@ -438,8 +437,6 @@ namespace realization {
 
         bool is_realization_legacy_format() const;
 
-        bool is_variable_mapping_provided() const;
-
     private:
         models::bmi::protocols::NgenBmiProtocols bmi_protocols;
         /**
@@ -466,7 +463,7 @@ namespace realization {
         /** Whether the realization file follows legacy format or the new format. */
         bool legacy_json_format = false;
 
-        bool variable_names_map_provided = false;
+        std::vector<std::string> output_var_units;
 
         std::vector<std::string> OPTIONAL_PARAMETERS = {
                 BMI_REALIZATION_CFG_PARAM_OPT__USES_FORCINGS

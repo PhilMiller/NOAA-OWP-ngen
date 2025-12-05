@@ -109,6 +109,18 @@ struct ForcingsEngineDataProvider
         return var_output_names_;
     }
 
+    const std::string get_provider_units_for_variable(const std::string& name) const override
+    {
+        auto iter = var_output_units_map_.find(name);
+        if(iter != var_output_units_map_.end()){
+            return iter->second;
+        }
+        std::string throw_msg; 
+        throw_msg.assign("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
     long get_data_start_time() const override
     {
         return clock_type::to_time_t(time_begin_);
@@ -188,10 +200,36 @@ struct ForcingsEngineDataProvider
             storage_type::instances.set(init, bmi_);
         }
 
-        // Now, initialize the BMI dependent instance members
-        // NOTE: using std::lround instead of static_cast will prevent potential UB
-        time_step_ = std::chrono::seconds{std::lround(bmi_->GetTimeStep())};
-        var_output_names_ = bmi_->GetOutputVarNames();
+        try {
+            // Now, initialize the BMI dependent instance members
+            // NOTE: using std::lround instead of static_cast will prevent potential UB
+            time_step_ = std::chrono::seconds{std::lround(bmi_->GetTimeStep())};
+            var_output_names_ = bmi_->GetOutputVarNames();
+            for (const std::string &output_var_name : var_output_names_) {
+                var_output_units_map_[output_var_name] = bmi_->GetVarUnits(output_var_name);
+            } 
+            if (Logger::GetLogger()->GetLogLevel() == LogLevel::DEBUG) {
+                ss.str(""); ss << "BMI instance initialized successfully" << std::endl;
+                LOG(LogLevel::DEBUG, ss.str());
+                ss.str(""); ss << "Time step: " << time_step_.count() << " seconds" << std::endl;
+                LOG(LogLevel::DEBUG, ss.str());
+                ss.str(""); ss << "Available output variable names:" << std::endl;
+                LOG(LogLevel::DEBUG, ss.str());
+                for (const auto& var_name : var_output_names_) {
+                    ss.str(""); ss << "  - " << var_name << std::endl;
+                    LOG(LogLevel::DEBUG, ss.str());
+                }
+            }
+        } catch (const std::exception& ex) {
+            ss.str(""); ss << "Error initializing BMI instance: " << ex.what() << std::endl;
+            LOG(LogLevel::FATAL, ss.str());
+            throw;
+        }
+
+        // Log successful constructor exit
+        ss.str(""); ss << "Exiting ForcingsEngineDataProvider constructor" << std::endl;
+        LOG(LogLevel::DEBUG, ss.str());
+
     }
 
     std::string ensure_variable(std::string name, const std::string& suffix = "_ELEMENT") const
@@ -220,6 +258,9 @@ struct ForcingsEngineDataProvider
 
     //! Output variable names
     std::vector<std::string> var_output_names_{};
+
+    //! Units of Output variables
+    std::map<std::string, std::string> var_output_units_map_;
 
     //! Calendar time for simulation beginning
     clock_type::time_point time_begin_{};

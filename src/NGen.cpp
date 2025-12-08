@@ -818,8 +818,6 @@ int main(int argc, char* argv[]) {
         ss.str("");
     }
 
-    _interp.reset();
-
     auto time_done_total                               = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_elapsed_total   = time_done_total - time_start;
 

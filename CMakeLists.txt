@@ -329,6 +329,7 @@ add_subdirectory("src/geojson")
 add_subdirectory("src/bmi")
 add_subdirectory("src/realizations/catchment")
 add_subdirectory("src/forcing")
+add_subdirectory("src/state_save_restore")
 add_subdirectory("src/utilities")
 add_subdirectory("src/utilities/mdarray")
 add_subdirectory("src/utilities/mdframe")
@@ -351,6 +352,7 @@ target_link_libraries(ngen
         NGen::bmi_protocols
         NGen::output
         NGen::parallel
+        NGen::state_save_restore
 )
 
 if(NGEN_WITH_SQLITE)

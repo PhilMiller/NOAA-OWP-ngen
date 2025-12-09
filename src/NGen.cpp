@@ -59,6 +59,8 @@
 #include "utilities/output/PerFormulationNexusOutputMgr.hpp"
 #endif
 
+#include <state_save_restore/State_Save_Restore.hpp>
+
 void ngen::exec_info::runtime_summary(std::ostream& stream) noexcept
 {
     stream << "Runtime configuration summary:\n";
@@ -421,10 +423,11 @@ int main(int argc, char* argv[]) {
     }
 
     auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
-
     sim_time = std::make_shared<Simulation_Time>(simulation_time_config);
 
     std::cout<<"Initializing formulations" << std::endl;
+
+    auto state_saving_config = State_Save_Config(realization_config);
 
     std::shared_ptr<realization::Formulation_Manager> manager =
         std::make_shared<realization::Formulation_Manager>(realization_config);

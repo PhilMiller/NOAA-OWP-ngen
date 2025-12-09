@@ -572,7 +572,7 @@ namespace realization {
             try {
                 auto const& nested_module = data_provider_iter->second;
                 long nested_module_time = nested_module->get_data_start_time() + ( this->get_model_current_time() - this->get_model_start_time() );
-                auto selector = CatchmentAggrDataSelector(this->get_catchment_id(),var_name,nested_module_time,this->record_duration(),"");
+                auto selector = CatchmentAggrDataSelector(this->get_catchment_id(),var_name,nested_module_time,this->record_duration(),"", 0);
                 //TODO: After merge PR#405, try re-adding support for index
                 return nested_module->get_value(selector);
             }
@@ -762,6 +762,8 @@ namespace realization {
         std::map<std::string, std::string> available_forcing_units;
 
         std::vector<std::string> output_var_units;
+
+        std::vector<int> output_var_indices;
 
         /**
          * Any configured default values for outputs, keyed by framework alias (or var name if this is globally unique).

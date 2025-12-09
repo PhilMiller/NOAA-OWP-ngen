@@ -60,6 +60,8 @@
 #include "utilities/output/PerFormulationNexusOutputMgr.hpp"
 #endif
 
+#include <state_save_restore/State_Save_Restore.hpp>
+
 std::stringstream ss;
 
 void ngen::exec_info::runtime_summary(std::ostream& stream) noexcept {
@@ -498,8 +500,9 @@ int main(int argc, char* argv[]) {
     }
 
     auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
-
     sim_time = std::make_shared<Simulation_Time>(simulation_time_config);
+
+    auto state_saving_config = State_Save_Config(realization_config);
 
     ss << "Initializing formulations" << std::endl;
     LOG(ss.str(), LogLevel::INFO);

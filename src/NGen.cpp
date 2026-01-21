@@ -789,6 +789,8 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
         simulation->save_end_of_run(snapshot);
     }
 
+    _interp.reset();
+
     simulation->finalize();
     manager->finalize();
 

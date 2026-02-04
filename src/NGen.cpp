@@ -717,25 +717,19 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
 
     LOG("[TIMING]: Init: " + std::to_string(time_elapsed_init.count()), LogLevel::INFO);
 
-    for (const auto& start_loader : state_saving_config.start_of_run_loaders()) {
-        LOG(LogLevel::INFO, "Loading start of run simulation data from state saving config " + start_loader.first);
-        std::shared_ptr<State_Snapshot_Loader> snapshot_loader = start_loader.second->initialize_snapshot(State_Saver::snapshot_time_now());
-        simulation->load_state_snapshot(snapshot_loader);
+    { // optionally run hot start loader if set in state saving config
+        auto hot_start_loader = state_saving_config.hot_start();
+        if (hot_start_loader) {
+            LOG(LogLevel::INFO, "Loading hot start data from prior snapshot.");
+            std::shared_ptr<State_Snapshot_Loader> snapshot_loader = hot_start_loader->initialize_snapshot(State_Saver::snapshot_time_now());
+            simulation->load_hot_start(snapshot_loader, manager->get_t_route_config_file_with_path());
+        }
     }
 
     simulation->run_catchments();
 
     // Close nexus output file(s)
     nexus_outputs_mgr->close();
-
-    for (const auto& end_saver : state_saving_config.end_of_run_savers()) {
-        LOG(LogLevel::INFO, "Saving end of run simulation data for state saving config " + end_saver.first);
-        std::shared_ptr<State_Snapshot_Saver> snapshot = end_saver.second->initialize_snapshot(
-            State_Saver::snapshot_time_now(),
-            State_Saver::State_Durability::strict
-        );
-        simulation->save_state_snapshot(snapshot);
-    }
 
 #if NGEN_WITH_MPI
     MPI_Barrier(MPI_COMM_WORLD);
@@ -756,8 +750,6 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
 #if NGEN_WITH_MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
-
-    manager->finalize();
 
     if (manager->get_using_routing()) {
         simulation->run_routing(features, manager->get_t_route_config_file_with_path());
@@ -781,6 +773,19 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
     std::chrono::duration<double> time_elapsed_coastal = time_done_coastal - time_done_routing;
     LOG("[TIMING]: Coastal: " + std::to_string(time_elapsed_coastal.count()), LogLevel::INFO);
 #endif
+
+    // run any end-of-run state saving after T-Route has finished but before starting to tear down data structures
+    for (const auto& end_saver : state_saving_config.end_of_run_savers()) {
+        LOG(LogLevel::INFO, "Saving end of run simulation data for state saving config " + end_saver.first);
+        std::shared_ptr<State_Snapshot_Saver> snapshot = end_saver.second->initialize_snapshot(
+            State_Saver::snapshot_time_now(),
+            State_Saver::State_Durability::strict
+        );
+        simulation->save_end_of_run(snapshot);
+    }
+
+    simulation->finalize();
+    manager->finalize();
 
     if (mpi_rank == 0) {
         ss << "NGen top-level timings:"

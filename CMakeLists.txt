@@ -337,6 +337,7 @@ add_subdirectory("src/utilities/logging")
 add_subdirectory("src/utilities/bmi")
 add_subdirectory("src/utilities/output")
 add_subdirectory("src/utilities/python")
+add_subdirectory("src/utilities/bmi")
 
 target_link_libraries(ngen
     PUBLIC
@@ -353,6 +354,7 @@ target_link_libraries(ngen
         NGen::output
         NGen::parallel
         NGen::state_save_restore
+        NGen::bmi_protocols
 )
 
 if(NGEN_WITH_SQLITE)

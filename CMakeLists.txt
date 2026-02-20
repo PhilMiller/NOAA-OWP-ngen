@@ -329,7 +329,6 @@ add_subdirectory("src/utilities")
 add_subdirectory("src/utilities/mdarray")
 add_subdirectory("src/utilities/mdframe")
 add_subdirectory("src/utilities/logging")
-add_subdirectory("src/utilities/bmi")
 add_subdirectory("src/utilities/output")
 add_subdirectory("src/utilities/python")
 add_subdirectory("src/utilities/bmi")
@@ -345,7 +344,6 @@ target_link_libraries(ngen
         NGen::forcing
         NGen::core_mediator
         NGen::logging
-        NGen::bmi_protocols
         NGen::output
         NGen::parallel
         NGen::bmi_protocols

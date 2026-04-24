@@ -583,7 +583,7 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
         // TODO: (later) use nullptr for now, until full support for multiple formulations per catchment is available
         std::shared_ptr<std::vector<std::string>> formulation_ids = nullptr;
 
-        size_t timesteps = manager->Simulation_Time_Object->get_total_output_times();
+        size_t timesteps = sim_time->get_total_output_times();
         #if NGEN_WITH_MPI
         int local_nexus_write_offset, total_nexus_count;
         int local_nexus_count = nexus_ids.size();
@@ -691,7 +691,7 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
                     features,
                     catchment_collection,
                     0,
-                    nexus_outputst_mgr
+                    nexus_outputs_mgr
                 );
             }
         }
@@ -712,7 +712,8 @@ int run_ngen(int argc, char* argv[], int mpi_num_procs, int mpi_rank) {
                                                        layers,
                                                        std::move(catchment_indexes),
                                                        std::move(nexus_indexes),
-                                                       mpi_rank);
+                                                       mpi_rank,
+                                                       mpi_num_procs);
 
     auto time_done_init                             = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_elapsed_init = time_done_init - time_start;

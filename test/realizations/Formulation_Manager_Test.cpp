@@ -1082,6 +1082,18 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_global) {
     std::stringstream stream;
     stream << fix_paths(EXAMPLE_7);
 
+    boost::property_tree::ptree realization_config;
+    boost::property_tree::json_parser::read_json(stream, realization_config);
+
+    auto possible_simulation_time = realization_config.get_child_optional("time");
+    if (!possible_simulation_time) {
+        std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
+    auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
+
     std::ostream* raw_pointer = &std::cout;
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
@@ -1091,7 +1103,7 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_global) {
     ASSERT_TRUE(manager.is_empty());
 
     this->add_feature("cat-67");
-    manager.read(this->fabric, catchment_output);
+    manager.read(simulation_time_config, this->fabric, catchment_output);
 
     ASSERT_EQ(manager.get_size(), 1);
     ASSERT_TRUE(manager.contains("cat-67"));
@@ -1101,6 +1113,18 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_specific) {
     std::stringstream stream;
     stream << fix_paths(EXAMPLE_8);
 
+    boost::property_tree::ptree realization_config;
+    boost::property_tree::json_parser::read_json(stream, realization_config);
+
+    auto possible_simulation_time = realization_config.get_child_optional("time");
+    if (!possible_simulation_time) {
+        std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
+    auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
+
     std::ostream* raw_pointer = &std::cout;
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
@@ -1110,7 +1134,7 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_specific) {
     ASSERT_TRUE(manager.is_empty());
 
     this->add_feature("cat-67");
-    manager.read(this->fabric, catchment_output);
+    manager.read(simulation_time_config, this->fabric, catchment_output);
 
     ASSERT_EQ(manager.get_size(), 1);
     ASSERT_TRUE(manager.contains("cat-67"));
@@ -1300,6 +1324,18 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_1_a) {
 
     stream << fix_paths(EXAMPLE_1);
 
+    boost::property_tree::ptree realization_config;
+    boost::property_tree::json_parser::read_json(stream, realization_config);
+
+    auto possible_simulation_time = realization_config.get_child_optional("time");
+    if (!possible_simulation_time) {
+        std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
+    auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
+
     std::ostream* raw_pointer = &std::cout;
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
@@ -1310,7 +1346,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_1_a) {
 
     this->add_feature("cat-52");
     this->add_feature("cat-67");
-    manager.read(this->fabric, catchment_output);
+    manager.read(simulation_time_config, this->fabric, catchment_output);
 
     ASSERT_TRUE(manager.is_disable_catchment_output());
 }
@@ -1321,6 +1357,18 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_2_a) {
 
     stream << fix_paths(EXAMPLE_2);
 
+    boost::property_tree::ptree realization_config;
+    boost::property_tree::json_parser::read_json(stream, realization_config);
+
+    auto possible_simulation_time = realization_config.get_child_optional("time");
+    if (!possible_simulation_time) {
+        std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
+    auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
+
     std::ostream* raw_pointer = &std::cout;
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
@@ -1331,7 +1379,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_2_a) {
 
     this->add_feature("cat-52");
     this->add_feature("cat-67");
-    manager.read(this->fabric, catchment_output);
+    manager.read(simulation_time_config, this->fabric, catchment_output);
 
     ASSERT_FALSE(manager.is_disable_catchment_output());
 }
@@ -1342,6 +1390,18 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_6_a) {
 
     stream << fix_paths(EXAMPLE_6);
 
+    boost::property_tree::ptree realization_config;
+    boost::property_tree::json_parser::read_json(stream, realization_config);
+
+    auto possible_simulation_time = realization_config.get_child_optional("time");
+    if (!possible_simulation_time) {
+        std::string throw_msg; throw_msg.assign("ERROR: No simulation time period defined.");
+        LOG(throw_msg, LogLevel::WARNING);
+        throw std::runtime_error(throw_msg);
+    }
+
+    auto simulation_time_config = realization::config::Time(*possible_simulation_time).make_params();
+
     std::ostream* raw_pointer = &std::cout;
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
@@ -1352,7 +1412,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_6_a) {
 
     this->add_feature("cat-52");
     this->add_feature("cat-67");
-    manager.read(this->fabric, catchment_output);
+    manager.read(simulation_time_config, this->fabric, catchment_output);
 
     ASSERT_FALSE(manager.is_disable_catchment_output());
 }

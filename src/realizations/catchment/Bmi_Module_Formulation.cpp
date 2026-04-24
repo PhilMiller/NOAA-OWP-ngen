@@ -207,7 +207,7 @@ namespace realization {
 
         long Bmi_Module_Formulation::record_duration() const {
             std::string throw_msg; throw_msg.assign("Bmi_Module_Formulation does not yet implement record_duration");
-            LOG(throw_msg, LogLevel::ERROR);
+            LOG(throw_msg, LogLevel::WARNING);
             throw std::runtime_error(throw_msg);
         }
 

@@ -22,7 +22,8 @@ NgenSimulation::NgenSimulation(
     std::vector<std::shared_ptr<ngen::Layer>> layers,
     std::unordered_map<std::string, int> catchment_indexes,
     std::unordered_map<std::string, int> nexus_indexes,
-    int mpi_rank
+    int mpi_rank,
+    int mpi_num_procs
                                )
     : simulation_step_(0)
     , sim_time_(std::make_shared<Simulation_Time>(sim_time))
@@ -30,6 +31,7 @@ NgenSimulation::NgenSimulation(
     , catchment_indexes_(std::move(catchment_indexes))
     , nexus_indexes_(std::move(nexus_indexes))
     , mpi_rank_(mpi_rank)
+    , mpi_num_procs_(mpi_num_procs)
 {
     catchment_outflows_.reserve(catchment_indexes_.size() * get_num_output_times());
     nexus_downstream_flows_.reserve(nexus_indexes_.size() * get_num_output_times());

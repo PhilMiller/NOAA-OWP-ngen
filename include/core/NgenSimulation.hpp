@@ -33,7 +33,8 @@ public:
                    std::vector<std::shared_ptr<ngen::Layer>> layers,
                    std::unordered_map<std::string, int> catchment_indexes,
                    std::unordered_map<std::string, int> nexus_indexes,
-                   int mpi_rank
+                   int mpi_rank,
+		   int mpi_num_procs
                    );
     NgenSimulation() = delete;
 
@@ -102,6 +103,7 @@ private:
     std::string unit_name() const;
 
     int mpi_rank_;
+    int mpi_num_procs_;
 
     // Serialization template will be defined and instantiated in the .cpp file
     template <class Archive>

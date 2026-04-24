@@ -293,17 +293,6 @@ namespace realization {
         const std::vector<std::string> get_bmi_input_variables() const override;
         const std::vector<std::string> get_bmi_output_variables() const override;
 
-        const boost::span<char> get_serialization_state() const;
-        void load_serialization_state(const boost::span<char> state) const;
-        void free_serialization_state() const;
-        void set_realization_file_format(bool is_legacy_format);
-
-        virtual void check_mass_balance(const int& iteration, const int& total_steps, const std::string& timestamp) const override {
-            //Create the protocol context, each member is const, and cannot change during the check
-            models::bmi::protocols::Context ctx{iteration, total_steps, timestamp, id};
-            bmi_protocols.run(models::bmi::protocols::Protocol::MASS_BALANCE, ctx);
-        }
-
         /**
          * Requests the BMI to copy its current state into memory. The state will remain in memory until either a new state is made or `free_serialization_state` is called.
          * 

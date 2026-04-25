@@ -1098,7 +1098,7 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_global) {
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
 
-    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+    realization::Formulation_Manager manager = realization::Formulation_Manager(realization_config);
 
     ASSERT_TRUE(manager.is_empty());
 
@@ -1129,7 +1129,7 @@ TEST_F(Formulation_Manager_Test, init_config_pattern_match_specific) {
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
 
-    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+    realization::Formulation_Manager manager = realization::Formulation_Manager(realization_config);
 
     ASSERT_TRUE(manager.is_empty());
 
@@ -1340,7 +1340,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_1_a) {
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
 
-    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+    realization::Formulation_Manager manager = realization::Formulation_Manager(realization_config);
 
     ASSERT_TRUE(manager.is_empty());
 
@@ -1373,7 +1373,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_2_a) {
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
 
-    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+    realization::Formulation_Manager manager = realization::Formulation_Manager(realization_config);
 
     ASSERT_TRUE(manager.is_empty());
 
@@ -1406,7 +1406,7 @@ TEST_F(Formulation_Manager_Test, test_is_disable_catchment_output_6_a) {
     std::shared_ptr<std::ostream> s_ptr(raw_pointer, [](void*) {});
     utils::StreamHandler catchment_output(s_ptr);
 
-    realization::Formulation_Manager manager = realization::Formulation_Manager(stream);
+    realization::Formulation_Manager manager = realization::Formulation_Manager(realization_config);
 
     ASSERT_TRUE(manager.is_empty());
 

@@ -45,6 +45,11 @@ namespace realization {
 	// LOG(ss.str(), LogLevel::DEBUG);
 
         size_t id_index = value.find(pattern);
+
+	// If there's no substitution to be made, then make this function idempotent
+	if (id_index == std::string::npos)
+	  return;
+
         while (id_index != std::string::npos) {
             value = value.replace(id_index, pattern.size(), replacement);
             id_index = value.find(pattern);

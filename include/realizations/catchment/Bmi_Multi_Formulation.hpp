@@ -435,8 +435,6 @@ namespace realization {
          */
         bool is_model_initialized() const override;
 
-        void set_realization_file_format(bool is_legacy_format);
-
         /**
          * Get whether a property's per-time-step values are each an aggregate sum over the entire time step.
          *
@@ -653,8 +651,6 @@ namespace realization {
          */
         std::map<std::string, std::shared_ptr<data_access::GenericDataProvider>> availableData;
 
-        bool is_realization_legacy_format() const;
-
     private:
 
         /**
@@ -748,9 +744,6 @@ namespace realization {
         int next_time_step_index = 0;
         /** The index of the "primary" nested module, used when functionality is deferred to a particular module's behavior. */
         int primary_module_index = -1;
-
-        /** Whether the realization file follows legacy format or the new format. */
-        bool legacy_json_format = false;
 
         friend Bmi_Multi_Formulation_Test;
         friend class ::Bmi_Cpp_Multi_Array_Test;

@@ -102,6 +102,7 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
 
     // Setup formulation output variable subset and order, if present
     std::vector<std::string> out_headers;//define empty vector for headers
+    bool realization_config_in_legacy_format = false;
     auto out_var_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUT_VARS);
     if (out_var_it != properties.end()) {
         std::vector<geojson::JSONProperty> out_vars_json_list = out_var_it->second.as_list();
@@ -110,11 +111,11 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
         if (out_vars_json_list.size() > 0){
             std::string item_type = get_propertytype_name(out_vars_json_list[0].get_type());
             if (item_type == "String"){
-                set_realization_file_format(true);
+                realization_config_in_legacy_format = true;
             }
         }
         std::vector<std::string> out_vars(out_vars_json_list.size());
-        if (is_realization_legacy_format()){
+        if (realization_config_in_legacy_format){
             for (int i = 0; i < out_vars_json_list.size(); ++i) {
                 out_vars[i] = out_vars_json_list[i].as_string();
             }
@@ -185,7 +186,7 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
 
     // Output header fields, if present
     auto out_headers_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUT_HEADER_FIELDS);
-    if(is_realization_legacy_format()){
+    if(realization_config_in_legacy_format){
         if (out_headers_it != properties.end() && get_output_variable_names().size() != 0) {
             std::vector<geojson::JSONProperty> out_headers_json_list = out_headers_it->second.as_list();
             std::vector<std::string> out_headers(out_headers_json_list.size());
@@ -597,11 +598,4 @@ bool Bmi_Multi_Formulation::is_model_initialized() const {
 bool Bmi_Multi_Formulation::is_time_step_beyond_end_time(time_step_t t_index) {
     // TODO: implement
     return false;
-}
-
-bool Bmi_Multi_Formulation::is_realization_legacy_format() const {
-    return legacy_json_format;
-}
-void Bmi_Multi_Formulation::set_realization_file_format(bool is_legacy_format){
-    legacy_json_format = is_legacy_format;
 }

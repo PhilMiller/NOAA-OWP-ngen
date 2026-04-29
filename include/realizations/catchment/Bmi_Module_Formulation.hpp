@@ -285,8 +285,6 @@ namespace realization {
             bmi_protocols.run(models::bmi::protocols::Protocol::MASS_BALANCE, ctx);
         }
 
-        void set_realization_file_format(bool is_legacy_format);
-
     protected:
 
         /**
@@ -455,8 +453,6 @@ namespace realization {
          */
         int next_time_step_index = 0;
 
-        bool is_realization_legacy_format() const;
-
     private:
         models::bmi::protocols::NgenBmiProtocols bmi_protocols;
         /**
@@ -479,9 +475,6 @@ namespace realization {
         /** A configured mapping of BMI model variable names to standard names for use inside the framework. */
         std::map<std::string, std::string> bmi_var_names_map;
         bool model_initialized = false;
-
-        /** Whether the realization file follows legacy format or the new format. */
-        bool legacy_json_format = false;
 
         std::vector<std::string> output_var_units;
 

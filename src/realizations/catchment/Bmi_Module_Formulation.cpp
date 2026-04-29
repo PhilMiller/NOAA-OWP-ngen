@@ -21,10 +21,7 @@ namespace realization {
             if(iter != available_forcing_units.end()){
                 return iter->second;
             }
-            std::string throw_msg;
-            throw_msg.assign("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
-            LOG(throw_msg, LogLevel::WARNING);
-            throw std::runtime_error(throw_msg);
+            throw std::runtime_error("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider.");
         }
 
         std::string Bmi_Module_Formulation::get_output_line_for_timestep(int timestep, std::string delimiter) {
@@ -38,7 +35,7 @@ namespace realization {
             if (!no_conversion_message_logged) {
                 no_conversion_message_logged = true;
                 if(is_realization_legacy_format()){
-                    logging::warning("Deprecated realization file format used for output variables. Unit conversion unavailable.");
+                    logging::warning("Deprecated realization file format used for output variables. No unit conversion will be applied.");
                 }
             }
 
@@ -65,7 +62,7 @@ namespace realization {
                             << "' source variable '" << uce.provider_bmi_var_name << "'"
                             << " raw value " << uce.unconverted_values[0] << "}"
                             << " message \"" << uce.what() << "\"";
-                        LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                        logging::warning(ss.str().c_str()); ss.str("");
                     }
                     var_value = uce.unconverted_values[0];
                 }
@@ -329,7 +326,6 @@ namespace realization {
                     bmi_var_name = mapped_name;
                 }
                 else{//else not an output variable
-                    LOG("No matching BMI variable name found for " + name, LogLevel::INFO);
                     throw std::runtime_error("No matching BMI variable name found for " + name);
                 }
             }
@@ -446,15 +442,15 @@ namespace realization {
                             out_headers[i] = out_vars[i];
                             std::stringstream ss;
                             ss << "Header not provided for '" << out_vars[i] << "'. Using the variable name as header." << std::endl;
-                            LOG(ss.str(), LogLevel::INFO); ss.str("");
+                            logging::info(ss.str().c_str()); ss.str("");
                         }
                         if(out_vars_json_list[i].has_key("units")){
                             //indicates that a valid unit is provided
                             output_var_units[i] = out_vars_json_list[i].at("units").as_string();
                         }
                         else{
-                           LOG("Units not provided for '" + out_vars[i] + "' in the realization file.",LogLevel::WARNING);
-                           output_var_units[i] = ""; //add an empty entry and populate it with BMI native units later.
+                            logging::warning(("Units not provided for '" + out_vars[i] + "' in the realization file.").c_str());
+                            output_var_units[i] = ""; //add an empty entry and populate it with BMI native units later.
                         }
                         if(out_vars_json_list[i].has_key("index")){
                             //indicates that a valid index is provided
@@ -467,7 +463,7 @@ namespace realization {
                         if (!UnitsHelper::can_parse(out_unit))
                         {
                             ss << "Unable to parse '" << out_unit << "' in units value." << std::endl;
-                            LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                            logging::warning(ss.str().c_str()); ss.str("");
                         }
                     }
                     if (out_vars.size() == 1 && out_vars[0].empty()) {
@@ -503,9 +499,9 @@ namespace realization {
             }
             else{
                 if (out_headers_it != properties.end()) {
-                    //indicates that the new json format has legacy headers format in the realization. 
+                    //indicates that the new json format has legacy headers format in the realization.
                     //put out a message that this is ignored.
-                    LOG("Deprecated output_header_fields item found in realization file ignored.", LogLevel::WARNING);
+                    logging::warning("Deprecated output_header_fields item found in realization file ignored.");
                 }
                 // if new format and no output/headers are mentioned.
                 set_output_header_fields(get_output_variable_names());

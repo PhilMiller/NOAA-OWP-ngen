@@ -138,14 +138,14 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
                     out_headers[i] = out_vars[i];
                     std::stringstream ss;
                     ss << "Header not provided for " << out_vars[i] << ". Using the variable name as header." << std::endl;
-                    LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                    logging::warning(ss.str().c_str()); ss.str("");
                 }
                 if(out_vars_json_list[i].has_key("units")){
                     //indicates that a valid unit is provided
                     output_var_units[i] = out_vars_json_list[i].at("units").as_string();
                 }
                 else{
-                    LOG("Units not provided for '" + out_vars[i] + "' in the realization file.",LogLevel::WARNING);
+                    logging::warning(("Units not provided for '" + out_vars[i] + "' in the realization file.").c_str());
                     output_var_units[i] = ""; //add an empty entry and populate it with BMI native units later.
                 }
                 if(out_vars_json_list[i].has_key("index")){
@@ -159,7 +159,7 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
                 if (!UnitsHelper::can_parse(out_unit))
                 {
                     ss << "Unable to parse '" << out_unit << "' in units value." << std::endl;
-                    LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                    logging::warning(ss.str().c_str()); ss.str("");
                 }
             }
             if (out_vars.size() == 1 && out_vars[0].empty()) {
@@ -200,7 +200,7 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
                 std::stringstream ss;
                 ss << "Configured output headers have " << out_headers.size() << " fields, but there are "
                         << get_output_variable_names().size() << " variables in the output" << std::endl;
-                LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                logging::warning(ss.str().c_str()); ss.str("");
                 set_output_header_fields(get_output_variable_names());
             }
         }
@@ -219,7 +219,7 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
         if (out_headers_it != properties.end()) {
             //indicates that the new json format has legacy headers format in the realization. 
             //put out a message that this is ignored.
-            LOG("Deprecated output_header_fields item found in realization file ignored.", LogLevel::WARNING);
+            logging::warning("Deprecated output_header_fields item found in realization file ignored.");
         }
     }
 
@@ -310,10 +310,7 @@ const std::string Bmi_Multi_Formulation::get_provider_units_for_variable(const s
         if(iter != available_forcing_units.end()){
             return iter->second;
         }
-        std::string throw_msg;
-        throw_msg.assign("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
-        LOG(throw_msg, LogLevel::WARNING);
-        throw std::runtime_error(throw_msg);
+        throw std::runtime_error("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
     }
 }
 
@@ -443,9 +440,7 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
 
                 auto source = availableData.find(var_name);
                 if (source == availableData.end()) {
-                    std::string throw_msg; throw_msg.assign(get_formulation_type() + " cannot find a source for output variable '" + var_name + "'");
-                    LOG(throw_msg, LogLevel::WARNING);
-                    throw std::runtime_error(throw_msg);
+                    throw std::runtime_error(get_formulation_type() + " cannot find a source for output variable '" + var_name + "'");
                 }
                 auto provider = source->second;
 
@@ -467,7 +462,7 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
                         << "' source variable '" << uce.provider_bmi_var_name << "'"
                         << " raw value " << uce.unconverted_values[0] << "}"
                         << " message \"" << uce.what() << "\"";
-                    LOG(ss.str(), LogLevel::WARNING); ss.str("");
+                    logging::warning(ss.str().c_str()); ss.str("");
                 }
                 value = uce.unconverted_values[0];
             }

@@ -121,19 +121,15 @@ class CsvPerFeatureForcingProvider : public data_access::GenericDataProvider
         auto output_variable_index = selector.get_output_variable_index();
 
         //CSV doesn't support array variables, Check that the index is zero.
-        if(output_variable_index != 0){
-            std::string throw_msg; throw_msg.assign("CSV Provider does not support array variables. Bad index " + std::to_string(output_variable_index) + " for value request.");
-            LOG(throw_msg, LogLevel::WARNING);
-            throw std::runtime_error(throw_msg);
+        if (output_variable_index != 0) {
+            throw std::runtime_error("CSV Provider does not support array variables. Bad index " + std::to_string(output_variable_index) + " for value request.");
         }
 
         try {
             current_index = get_ts_index_for_time(init_time);
         }
         catch (const std::out_of_range &e) {
-            std::string throw_msg; throw_msg.assign("Forcing had bad init_time " + std::to_string(init_time) + " for value request.");
-            LOG(throw_msg, LogLevel::WARNING);
-            throw std::out_of_range(throw_msg);
+            throw std::out_of_range("Forcing had bad init_time " + std::to_string(init_time) + " for value request");
         }
 
         std::vector<double> involved_time_step_values;
@@ -235,15 +231,12 @@ class CsvPerFeatureForcingProvider : public data_access::GenericDataProvider
         return available_forcings;
     }
 
-    const std::string get_provider_units_for_variable(const std::string& name) const {
+    const std::string get_provider_units_for_variable(const std::string& name) const override {
         auto iter = available_forcings_units.find(name);
         if(iter != available_forcings_units.end()){
             return iter->second;
         }
-        std::string throw_msg;
-        throw_msg.assign("Got request to retrieve units for variable '" + name + "', but it was not found in the data provider. This should not happen." + SOURCE_LOC);
-        LOG(throw_msg, LogLevel::WARNING);
-        throw std::runtime_error(throw_msg);
+        throw std::runtime_error("CsvPerFeatureForcingProvider: Got request to retrieve units for variable '" + name + "', but it was not found in the data provider");
     };
 
     private:

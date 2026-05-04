@@ -118,6 +118,12 @@ class CsvPerFeatureForcingProvider : public data_access::GenericDataProvider
         auto init_time = selector.get_init_time();
         auto output_name = selector.get_variable_name();
         auto output_units = selector.get_output_units();
+        auto output_variable_index = selector.get_output_variable_index();
+
+        //CSV doesn't support array variables, Check that the index is zero.
+        if (output_variable_index != 0) {
+            throw std::runtime_error("CSV Provider does not support array variables. Bad index " + std::to_string(output_variable_index) + " for value request.");
+        }
 
         try {
             current_index = get_ts_index_for_time(init_time);

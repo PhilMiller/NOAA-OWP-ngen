@@ -204,6 +204,7 @@ namespace realization {
         {
             std::string output_name = selector.get_variable_name();
             std::string output_units = selector.get_output_units();
+            int output_index = selector.get_output_variable_index();
 
             // First make sure this is an available output
             auto forcing_outputs = get_available_variable_names();
@@ -226,7 +227,7 @@ namespace realization {
             if( !bmi_var_name.empty() )
             {
                 //Get forcing value from BMI variable
-                double value = get_var_value_as_double(0, bmi_var_name);
+                double value = get_var_value_as_double(output_index, bmi_var_name);
 
                 // Convert units
                 std::string native_units = get_bmi_model()->GetVarUnits(bmi_var_name);

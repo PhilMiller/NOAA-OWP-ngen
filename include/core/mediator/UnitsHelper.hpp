@@ -28,6 +28,8 @@ class UnitsHelper {
         std::string to_units;
         std::vector<double> unconverted_values;
     };
+
+    static bool can_parse(const std::string &in_units);
 };
 
 #endif //NGEN_UNITSHELPER_H

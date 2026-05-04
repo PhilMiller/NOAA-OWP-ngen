@@ -469,6 +469,8 @@ namespace realization {
         std::map<std::string, std::string> bmi_var_names_map;
         bool model_initialized = false;
 
+        std::vector<std::string> output_var_units;
+
         std::vector<std::string> OPTIONAL_PARAMETERS = {
                 BMI_REALIZATION_CFG_PARAM_OPT__USES_FORCINGS
                 BMI_REALIZATION_CFG_PARAM_OPT__FORCING_FILE,

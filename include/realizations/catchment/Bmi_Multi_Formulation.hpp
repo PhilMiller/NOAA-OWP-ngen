@@ -694,6 +694,9 @@ namespace realization {
 
         /** The set of available "forcings" (output variables, plus their mapped aliases) this instance can provide. */
         std::vector<std::string> available_forcings;
+
+        std::vector<std::string> output_var_units;
+
         /**
          * Any configured default values for outputs, keyed by framework alias (or var name if this is globally unique).
          */

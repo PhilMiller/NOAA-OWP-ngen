@@ -140,6 +140,13 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
         set_output_header_fields(get_output_variable_names());
     }
 
+    //check if units have not been specified. If not, default to native units.
+    std::string blank_string = "";
+    auto &names = get_output_variable_names();
+    if(output_var_units.size() == 0){
+        output_var_units.resize(names.size(), blank_string);
+    }
+
     // Output precision, if present
     auto out_precision_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUTPUT_PRECISION);
     if (out_precision_it != properties.end()) {
@@ -299,12 +306,49 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
 
     // Start by first checking whether we are NOT just using the last module's values
     if (!is_out_vars_from_last_mod) {
-        std::string output_str;
-        for (const std::string& name : get_output_variable_names()) {
-            // Placeholder to request no conversion
-            std::string output_units = "";
-            double value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), name, 0, 0, output_units), MEAN);
-            output_str += (output_str.empty() ? "" : ",") + std::to_string(value);
+        // TODO: see Github issue 355: this design (and formulation output handling in general) needs to be reworked
+        // Clear anything currently in the multi formulation's stream buffer
+        output_text_stream->str(std::string());
+
+        const std::vector<std::string> &output_var_names = get_output_variable_names();
+        // This almost certainly should never happen, but just to be safe ...
+        if (output_var_names.empty()) { return ""; }
+
+        auto duration = record_duration();
+        time_t time_offset = get_model_current_time() - get_model_start_time();
+
+        for (int i = 0; i < output_var_names.size(); ++i) {
+            double value;
+            try{
+                auto var_name = output_var_names[i];
+                time_t init_time = provider->get_data_start_time() + time_offset;
+                value = get_value(CatchmentAggrDataSelector(get_catchment_id(), var_name, init_time, duration, output_var_units[i]), MEAN);
+            }
+            catch(UnitsHelper::unit_conversion_exception &uce){
+                data_access::unit_error_log_key key{"File Output Multi", output_var_names[i], uce.provider_model_name, uce.provider_var_name, uce.what()};
+                auto ret = data_access::unit_errors_reported.insert(key);
+                bool new_error = ret.second;
+                if (new_error) {
+                    std::stringstream ss;
+                    ss << "Unit conversion failure:"
+                        << " requester {'Get Output Line for Timestep (Multi Formulation)"
+                        << "' catchment '" << get_catchment_id()
+                        << "' variable '" << output_var_names[i]
+                        << "' units '" << output_var_units[i] << "'}"
+                        << " provider {'" << uce.provider_model_name
+                        << "' source variable '" << uce.provider_var_name << "'"
+                        << " raw value " << uce.unconverted_values[0] << "}"
+                        << " message \"" << uce.what() << "\"";
+                    logging::warning(ss.str().c_str()); ss.str("");
+                }
+                value = uce.unconverted_values[0];
+            }
+            if(i == 0){
+                *output_text_stream << value; //without delimiter for first output variable.
+            }
+            else{
+                *output_text_stream << delimiter << value; //with delimiter for the rest.
+            }
         }
         return output_str;
     }

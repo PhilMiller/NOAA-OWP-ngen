@@ -23,18 +23,34 @@ namespace realization {
                 throw std::invalid_argument("Only current time step valid when getting output for BMI C++ formulation");
             }
 
-            static bool no_conversion_message_logged = false;
-            if (!no_conversion_message_logged) {
-                no_conversion_message_logged = true;
-                logging::warning("Output variables do not have unit conversion. Capability not yet implemented in ngen.");
-            }
-
             std::string output_str;
-            for (const std::string& name : get_output_variable_names()) {
-                // Placeholder to request no conversion
-                std::string output_units = "";
-                double value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), name, 0, 0, output_units), MEAN);
-                output_str += (output_str.empty() ? "" : ",") + std::to_string(value);
+            for (int i = 0; i < get_output_variable_names().size(); ++i) {
+                std::string name = get_output_variable_names()[i];
+                double var_value;
+                try{
+                    var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), name, 0, 0, output_var_units[i]), MEAN);
+                }
+                catch(UnitsHelper::unit_conversion_exception &uce){
+                    data_access::unit_error_log_key key{"File output", name, uce.provider_model_name, uce.provider_var_name, uce.what()};
+                    auto ret = data_access::unit_errors_reported.insert(key);
+                    bool new_error = ret.second;
+                    if (new_error) {
+                        std::stringstream ss;
+                        ss << "Unit conversion failure:"
+                            << " requester {'Get Output Line for Timestep (Module Formulation)"
+                            << "' catchment '" << get_catchment_id()
+                            << "' variable '" << name
+                            << "' units '" << output_var_units[i] << "'}"
+                            << " provider {'" << uce.provider_model_name
+                            << "' source variable '" << uce.provider_var_name << "'"
+                            << " raw value " << uce.unconverted_values[0] << "}"
+                            << " message \"" << uce.what() << "\"";
+                        logging::warning(ss.str().c_str()); ss.str("");
+                    }
+                    var_value = uce.unconverted_values[0];
+                }
+                output_str += (output_str.empty() ? "" : ",") +
+                    std::to_string(var_value);
             }
             return output_str;
         }
@@ -417,6 +433,13 @@ namespace realization {
                 //Initialize all NgenBmiProtocols with the valid adapter pointer and any properties
                 //provided in the read configuration.
                 bmi_protocols = models::bmi::protocols::NgenBmiProtocols(get_bmi_model(), properties);
+            }
+
+            //check if units have not been specified. If not, default to native units.
+            std::string blank_string = "";
+            auto &names = get_output_variable_names();
+            if(output_var_units.size() == 0){
+                output_var_units.resize(names.size(), blank_string);
             }
         }
         /**

@@ -101,12 +101,76 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
     // TODO: get synced end_time values for all models
 
     // Setup formulation output variable subset and order, if present
+    std::vector<std::string> out_headers;//define empty vector for headers
+    bool realization_config_in_legacy_format = false;
     auto out_var_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUT_VARS);
     if (out_var_it != properties.end()) {
         std::vector<geojson::JSONProperty> out_vars_json_list = out_var_it->second.as_list();
+        //Check if the first item is an object type or string type.
+        //string type: old format; object type: new format
+        if (out_vars_json_list.size() > 0){
+            std::string item_type = get_propertytype_name(out_vars_json_list[0].get_type());
+            if (item_type == "String"){
+                realization_config_in_legacy_format = true;
+            }
+        }
         std::vector<std::string> out_vars(out_vars_json_list.size());
-        for (int i = 0; i < out_vars_json_list.size(); ++i) {
-            out_vars[i] = out_vars_json_list[i].as_string();
+        if (realization_config_in_legacy_format){
+            for (int i = 0; i < out_vars_json_list.size(); ++i) {
+                out_vars[i] = out_vars_json_list[i].as_string();
+            }
+            // empty array may be read as [""], so make it empty
+            if (out_vars.size() == 1 && out_vars[0].empty())
+                out_vars.pop_back();
+        }
+        else{
+            out_headers.resize(out_vars_json_list.size()); //assumption: number of vars = number of headers
+            output_var_units.resize(out_vars_json_list.size()); //assumption: number of vars = number of units
+            output_var_indices.resize(out_vars_json_list.size());
+            for (int i = 0; i < out_vars_json_list.size(); ++i) {
+                out_vars[i] = out_vars_json_list[i].at("name").as_string();
+                if(out_vars_json_list[i].has_key("header")){
+                    //indicates that a valid header is provided
+                    out_headers[i] = out_vars_json_list[i].at("header").as_string();
+                }
+                else{
+                    //indicates that header is not provided. The error actually returns a string.
+                    //in such cases, we assign variable name to the header.
+                    out_headers[i] = out_vars[i];
+                    std::stringstream ss;
+                    ss << "Header not provided for " << out_vars[i] << ". Using the variable name as header." << std::endl;
+                    logging::warning(ss.str().c_str()); ss.str("");
+                }
+                if(out_vars_json_list[i].has_key("units")){
+                    //indicates that a valid unit is provided
+                    output_var_units[i] = out_vars_json_list[i].at("units").as_string();
+                }
+                else{
+                    logging::warning(("Units not provided for '" + out_vars[i] + "' in the realization file.").c_str());
+                    output_var_units[i] = ""; //add an empty entry and populate it with BMI native units later.
+                }
+                if(out_vars_json_list[i].has_key("index")){
+                    //indicates that a valid unit is provided
+                    output_var_indices[i] = stoi(out_vars_json_list[i].at("index").as_string());
+                }
+            }
+            //check if the units can be parsed correctly and write a warning message
+            std::stringstream ss;
+            for (const std::string& out_unit : output_var_units) {
+                if (!UnitsHelper::can_parse(out_unit))
+                {
+                    ss << "Unable to parse '" << out_unit << "' in units value." << std::endl;
+                    logging::warning(ss.str().c_str()); ss.str("");
+                }
+            }
+            if (out_vars.size() == 1 && out_vars[0].empty()) {
+                // empty array may be read as [""], so make everything empty
+                out_vars.pop_back();
+                out_headers.pop_back();
+                output_var_units.pop_back();
+                output_var_indices.pop_back();
+            }
+            set_output_header_fields(out_headers);
         }
         set_output_variable_names(out_vars);
     }
@@ -121,15 +185,24 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
 
     // Output header fields, if present
     auto out_headers_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUT_HEADER_FIELDS);
-    if (out_headers_it != properties.end()) {
-        std::vector<geojson::JSONProperty> out_headers_json_list = out_headers_it->second.as_list();
-        std::vector<std::string> out_headers(out_headers_json_list.size());
-        for (int i = 0; i < out_headers_json_list.size(); ++i) {
-            out_headers[i] = out_headers_json_list[i].as_string();
-        }
-        // Make sure that we have the same number of headers as we have output values
-        if (get_output_variable_names().size() == out_headers.size()) {
-            set_output_header_fields(out_headers);
+    if(realization_config_in_legacy_format){
+        if (out_headers_it != properties.end() && get_output_variable_names().size() != 0) {
+            std::vector<geojson::JSONProperty> out_headers_json_list = out_headers_it->second.as_list();
+            std::vector<std::string> out_headers(out_headers_json_list.size());
+            for (int i = 0; i < out_headers_json_list.size(); ++i) {
+                out_headers[i] = out_headers_json_list[i].as_string();
+            }
+            // Make sure that we have the same number of headers as we have output values
+            if (get_output_variable_names().size() == out_headers.size()) {
+                set_output_header_fields(out_headers);
+            }
+            else {
+                std::stringstream ss;
+                ss << "Configured output headers have " << out_headers.size() << " fields, but there are "
+                        << get_output_variable_names().size() << " variables in the output" << std::endl;
+                logging::warning(ss.str().c_str()); ss.str("");
+                set_output_header_fields(get_output_variable_names());
+            }
         }
         else {
             std::cerr << "WARN: configured output headers have " << out_headers.size() << " fields, but there are "
@@ -137,8 +210,17 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
             set_output_header_fields(get_output_variable_names());
         }
     }
-    else {
-        set_output_header_fields(get_output_variable_names());
+    else{
+        //in new format, if headers are not set. 
+        //This happens when the the BMI output variables of the last nested module should be used.
+        if(out_headers.size() == 0){
+            set_output_header_fields(get_output_variable_names());
+        }
+        if (out_headers_it != properties.end()) {
+            //indicates that the new json format has legacy headers format in the realization. 
+            //put out a message that this is ignored.
+            logging::warning("Deprecated output_header_fields item found in realization file ignored.");
+        }
     }
 
     //check if units have not been specified. If not, default to native units.
@@ -146,6 +228,12 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
     auto &names = get_output_variable_names();
     if(output_var_units.size() == 0){
         output_var_units.resize(names.size(), blank_string);
+    }
+
+    for (int i = 0; i < names.size(); ++i) {
+        if (output_var_units[i] == blank_string){
+            output_var_units[i] = get_provider_units_for_variable(names[i]);
+        }
     }
 
     //check if output variable indices (for vector variables) are specified in config. If not, default to zero (first index).
@@ -320,8 +408,14 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
         throw std::invalid_argument("Only current time step valid when getting multi-module BMI formulation output");
     }
 
-    // Start by first checking whether we are NOT just using the last module's values
-    if (!is_out_vars_from_last_mod) {
+    // Start by first checking whether we are just using the last module's values
+    if (is_out_vars_from_last_mod) {
+        // The default behavior, which means we either
+        //   - were originally set to use the default of getting the output of the last module
+        //   - tried a more complex config, but ran into an error, and are needing to revert to the default
+        return modules.back()->get_output_line_for_timestep(timestep, delimiter);
+    }
+    else{
         // TODO: see Github issue 355: this design (and formulation output handling in general) needs to be reworked
         // Clear anything currently in the multi formulation's stream buffer
         output_text_stream->str(std::string());
@@ -368,10 +462,6 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
         }
         return output_str;
     }
-    // Otherwise, use the default behavior, which means we either
-    //   - were originally set to use the default of getting the output of the last module
-    //   - tried a more complex config, but ran into an error, and are needing to revert to the default
-    return modules.back()->get_output_line_for_timestep(timestep, delimiter);
 }
 
 void Bmi_Multi_Formulation::update(time_step_t t_index, time_step_t t_delta) {

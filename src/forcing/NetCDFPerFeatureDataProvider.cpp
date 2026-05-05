@@ -352,7 +352,7 @@ double NetCDFPerFeatureDataProvider::get_value(const CatchmentAggrDataSelector& 
     
     auto ncvar = get_ncvar(selector.get_variable_name());
 
-    std::string native_units = get_ncvar_units(selector.get_variable_name());
+    std::string native_units = get_provider_units_for_variable(selector.get_variable_name());
 
     auto read_len = idx2 - idx1 + 1;
 
@@ -455,13 +455,8 @@ const netCDF::NcVar& NetCDFPerFeatureDataProvider::get_ncvar(const std::string& 
     throw std::runtime_error("Got request for variable " + name + " but it was not found in the cache. This should not happen." + SOURCE_LOC);
 }
 
-const std::string& NetCDFPerFeatureDataProvider::get_ncvar_units(const std::string& name){
-    auto cache_hit = units_cache.find(name);
-    if(cache_hit != units_cache.end()){
-        return cache_hit->second;
-    }
-
-    throw std::runtime_error("Got units request for variable " + name + " but it was not found in the cache. This should not happen." + SOURCE_LOC);
+std::string NetCDFPerFeatureDataProvider::get_provider_units_for_variable(const std::string& name) const {
+    return units_cache.at(name);
 }
 
 }

@@ -130,6 +130,8 @@ namespace realization {
          */
         boost::span <const std::string> get_available_variable_names() const override;
 
+        std::string get_provider_units_for_variable(const std::string& name) const override;
+
         /**
         * Get the input variables of 
         * the first nested BMI model.
@@ -631,6 +633,7 @@ namespace realization {
                             " because a previous module is using this output variable name/alias.");
                 }
                 availableData[framework_alias] = mod;
+                available_forcing_units[framework_alias] = mod->get_provider_units_for_variable(framework_alias);
             }
             module_variable_maps[mod_index] = var_aliases;
             return mod;
@@ -694,6 +697,8 @@ namespace realization {
 
         /** The set of available "forcings" (output variables, plus their mapped aliases) this instance can provide. */
         std::vector<std::string> available_forcings;
+
+        std::map<std::string, std::string> available_forcing_units;
 
         std::vector<std::string> output_var_units;
 

@@ -231,6 +231,10 @@ class CsvPerFeatureForcingProvider : public data_access::GenericDataProvider
         return available_forcings;
     }
 
+    std::string get_provider_units_for_variable(const std::string& name) const override {
+        return available_forcings_units.at(name);
+    };
+
     private:
 
     /**

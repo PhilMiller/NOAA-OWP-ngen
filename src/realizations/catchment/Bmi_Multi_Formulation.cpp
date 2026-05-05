@@ -147,6 +147,11 @@ void Bmi_Multi_Formulation::create_multi_formulation(geojson::PropertyMap proper
         output_var_units.resize(names.size(), blank_string);
     }
 
+    //check if output variable indices (for vector variables) are specified in config. If not, default to zero (first index).
+    if(output_var_indices.size() == 0){
+        output_var_indices.resize(names.size(), 0);
+    }
+
     // Output precision, if present
     auto out_precision_it = properties.find(BMI_REALIZATION_CFG_PARAM_OPT__OUTPUT_PRECISION);
     if (out_precision_it != properties.end()) {
@@ -322,7 +327,7 @@ std::string Bmi_Multi_Formulation::get_output_line_for_timestep(int timestep, st
             try{
                 auto var_name = output_var_names[i];
                 time_t init_time = provider->get_data_start_time() + time_offset;
-                value = get_value(CatchmentAggrDataSelector(get_catchment_id(), var_name, init_time, duration, output_var_units[i]), MEAN);
+                value = get_value(CatchmentAggrDataSelector(get_catchment_id(), var_name, init_time, duration, output_var_units[i], output_var_indices[i]), MEAN);
             }
             catch(UnitsHelper::unit_conversion_exception &uce){
                 data_access::unit_error_log_key key{"File Output Multi", output_var_names[i], uce.provider_model_name, uce.provider_var_name, uce.what()};
@@ -427,7 +432,7 @@ double Bmi_Multi_Formulation::get_response(time_step_t t_index, time_step_t t_de
     }
     double var_value;
     try{
-        var_value = modules[index]->get_value(CatchmentAggrDataSelector(this->get_catchment_id(), get_bmi_main_output_var(), 0, 0, "m"), MEAN);
+        var_value = modules[index]->get_value(CatchmentAggrDataSelector(this->get_catchment_id(), get_bmi_main_output_var(), 0, 0, "m", 0), MEAN);
     }
     catch(UnitsHelper::unit_conversion_exception &uce){
         data_access::unit_error_log_key key{"Bmi_Multi_Formulation::get_response", get_bmi_main_output_var(), uce.provider_model_name, uce.provider_var_name, uce.what()};

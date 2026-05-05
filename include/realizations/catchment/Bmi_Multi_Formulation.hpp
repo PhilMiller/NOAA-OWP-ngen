@@ -697,6 +697,8 @@ namespace realization {
 
         std::vector<std::string> output_var_units;
 
+        std::vector<int> output_var_indices;
+
         /**
          * Any configured default values for outputs, keyed by framework alias (or var name if this is globally unique).
          */

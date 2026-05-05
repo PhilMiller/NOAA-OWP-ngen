@@ -28,7 +28,7 @@ namespace realization {
                 std::string name = get_output_variable_names()[i];
                 double var_value;
                 try{
-                    var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), name, 0, 0, output_var_units[i]), MEAN);
+                    var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), name, 0, 0, output_var_units[i], output_var_indices[i]), MEAN);
                 }
                 catch(UnitsHelper::unit_conversion_exception &uce){
                     data_access::unit_error_log_key key{"File output", name, uce.provider_model_name, uce.provider_var_name, uce.what()};
@@ -99,7 +99,7 @@ namespace realization {
             update(t_index, t_delta);
             double var_value;
             try{
-                var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), get_bmi_main_output_var(), 0, 0, "m"),MEAN);
+                var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), get_bmi_main_output_var(), 0, 0, "m", 0), MEAN);
             }
             catch(UnitsHelper::unit_conversion_exception &uce){
                 data_access::unit_error_log_key key{"Bmi_Module_Formulation::get_response", get_bmi_main_output_var(), uce.provider_model_name, uce.provider_var_name, uce.what()};
@@ -441,6 +441,11 @@ namespace realization {
             if(output_var_units.size() == 0){
                 output_var_units.resize(names.size(), blank_string);
             }
+
+            //check if output variable indices (for vector variables) are specified in config. If not, default to zero (first index).
+            if(output_var_indices.size() == 0){
+                output_var_indices.resize(names.size(), 0);
+            }
         }
         /**
          * @brief Template function for copying iterator range into contiguous array.
@@ -712,7 +717,7 @@ namespace realization {
                 if (numItems != 1) {
                     //more than a single value needed for var_name
                     auto values = provider->get_values(CatchmentAggrDataSelector(this->get_catchment_id(),var_map_alias, model_epoch_time, t_delta,
-                                                   get_bmi_model()->GetVarUnits(var_name)));
+                                                                                 get_bmi_model()->GetVarUnits(var_name), 0));
                     //need to marshal data types to the receiver as well
                     //this could be done a little more elegantly if the provider interface were
                     //"type aware", but for now, this will do (but requires yet another copy)
@@ -733,7 +738,7 @@ namespace realization {
                     try {
                         //scalar value
                         double value = provider->get_value(CatchmentAggrDataSelector(this->get_catchment_id(),var_map_alias, model_epoch_time, t_delta,
-                                                                                     get_bmi_model()->GetVarUnits(var_name)));
+                                                                                     get_bmi_model()->GetVarUnits(var_name), 0));
                         value_ptr = get_value_as_type(type, value);
                     } catch (UnitsHelper::unit_conversion_exception &uce) {
                         data_access::unit_error_log_key key{get_id(), var_map_alias, uce.provider_model_name, uce.provider_var_name, uce.what()};

@@ -56,11 +56,13 @@ Per the [BMI documentation]() for `get_var_units(...)`:
 > * Dimensionless quantities should use "" or "1" as the unit.
 > * Variables without units should use "none".
 
-We prefer `1` for dimensionless units.
+We prefer `1` for dimensionless units. For convenience and robustness, ngen normalizes several equivalent spellings internally: an empty string (`""`), `none`, `unitless`, `dimensionless`, and `-` are all interpreted as the dimensionless unit `1`. When the *requested* output units are one of these none-ish spellings but the source units are not dimensionless, ngen treats the request as "no units specified" and passes the value through **without** conversion rather than attempting one. This is a deliberately *lenient* default: a quantity that genuinely carries units but is requested as none-ish is passed through silently rather than flagged as a mismatch. Future efforts may make this stricter (treating `1`/`none` as a dimensionless unit that must match the source), so do not rely on this pass-through as a way to quietly discard units.
 
-If units are *not* provided (i.e. `get_var_units(...)` returns `BMI_FAILURE` or throws an exception) or the unit string is not parsable, this will not prevent the use of the model in ngen, but ngen will report a large number of warning messages and **the values will be passed to other parts of the system without any unit conversion**. The same will happen if you configure ngen to couple any pair of quantities whose units are not convertible.
+If units are *not* provided (i.e. `get_var_units(...)` returns `BMI_FAILURE` or throws an exception) or the unit string is not parsable, this will not prevent the use of the model in ngen, but **the values will be passed to other parts of the system without any unit conversion**. The same will happen if you configure ngen to couple any pair of quantities whose units are not convertible.
 
-Note that the `get_var_units(...)` function will be called regardless and that there is a fast-passthrough optimization for cases where the unit conversion strings are exactly the same, so there is effectively no downside to providing units in every case, and doing so is **strongly encouraged**.
+In these cases ngen reports the problem so it can be corrected. Rather than emitting a warning on every timestep, ngen logs each distinct mismatch **once** &mdash; deduplicated by the requesting model, variable, and requested units. (A mismatch affecting many catchments is therefore reported once, naming the first catchment seen, rather than once per catchment.) Each report names the requesting model, catchment, and variable, the requested units, the providing model and its source variable, the raw (unconverted) value, and a message describing the failure. This makes it straightforward to locate and fix the offending module or configuration while keeping the log readable.
+
+Note that the `get_var_units(...)` function will be called regardless and that there is a fast-passthrough optimization for cases where the unit conversion strings are exactly the same (or both resolve to dimensionless), so there is effectively no downside to providing units in every case, and doing so is **strongly encouraged**.
 
 
 ## Variable Types and Sizes

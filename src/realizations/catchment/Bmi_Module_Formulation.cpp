@@ -1,6 +1,7 @@
 #include "Bmi_Module_Formulation.hpp"
 #include "utilities/logging_utils.h"
 #include <UnitsHelper.hpp>
+#include <UnitConversionMediator.hpp>
 
 namespace realization {
         void Bmi_Module_Formulation::create_formulation(boost::property_tree::ptree &config, geojson::PropertyMap *global) {
@@ -81,30 +82,13 @@ namespace realization {
 
         double Bmi_Module_Formulation::get_response(time_step_t t_index, time_step_t t_delta) {
             update(t_index, t_delta);
-            double var_value;
-            try{
-                var_value = get_value(CatchmentAggrDataSelector(this->get_catchment_id(), get_bmi_main_output_var(), 0, 0, "m"),MEAN);
-            }
-            catch(UnitsHelper::unit_conversion_exception &uce){
-                data_access::unit_error_log_key key{"Bmi_Module_Formulation::get_response", get_bmi_main_output_var(), uce.provider_model_name, uce.provider_var_name, uce.what()};
-                auto ret = data_access::unit_errors_reported.insert(key);
-                bool new_error = ret.second;
-                if (new_error) {
-                    std::stringstream ss;
-                    ss << "Unit conversion failure:"
-                        << " requester {'Get Response (Module Formulation)"
-                        << "' catchment '" << get_catchment_id()
-                        << "' variable '" << get_bmi_main_output_var()
-                        << "' units 'm'}"
-                        << " provider {'" << uce.provider_model_name
-                        << "' source variable '" << uce.provider_var_name << "'"
-                        << " raw value " << uce.unconverted_values[0] << "}"
-                        << " message \"" << uce.what() << "\"";
-                    logging::warning(ss.str().c_str()); ss.str("");
-                }
-                var_value = uce.unconverted_values[0];
-            }
-            return var_value;
+            UnitConversionMediator::conversion_request request{
+                "Get Response (Module Formulation): " + get_bmi_model()->get_model_name(),
+                get_catchment_id(), get_bmi_main_output_var(), "", "m"};
+            return UnitConversionMediator::convert(request,
+                [&](const std::string& units) {
+                    return get_value(CatchmentAggrDataSelector(get_catchment_id(), get_bmi_main_output_var(), 0, 0, units), MEAN);
+                });
         }
 
         time_t Bmi_Module_Formulation::get_variable_time_begin(const std::string &variable_name) {
@@ -685,10 +669,15 @@ namespace realization {
                 // Finally, use the value obtained to set the model input
                 std::string type = get_bmi_model()->get_analogous_cxx_type(get_bmi_model()->GetVarType(var_name),
                                                                            varItemSize);
+                UnitConversionMediator::conversion_request request{
+                    get_bmi_model()->get_model_name(), get_catchment_id(), var_name, var_map_alias,
+                    get_bmi_model()->GetVarUnits(var_name)};
                 if (numItems != 1) {
                     //more than a single value needed for var_name
-                    auto values = provider->get_values(CatchmentAggrDataSelector(this->get_catchment_id(),var_map_alias, model_epoch_time, t_delta,
-                                                   get_bmi_model()->GetVarUnits(var_name)));
+                    auto values = UnitConversionMediator::convert(request,
+                        [&](const std::string& units) {
+                            return provider->get_values(CatchmentAggrDataSelector(get_catchment_id(), var_map_alias, model_epoch_time, t_delta, units));
+                        });
                     //need to marshal data types to the receiver as well
                     //this could be done a little more elegantly if the provider interface were
                     //"type aware", but for now, this will do (but requires yet another copy)
@@ -706,28 +695,12 @@ namespace realization {
                     value_ptr = get_values_as_type( type, values.begin(), values.end() );
 
                 } else {
-                    try {
-                        //scalar value
-                        double value = provider->get_value(CatchmentAggrDataSelector(this->get_catchment_id(),var_map_alias, model_epoch_time, t_delta,
-                                                                                     get_bmi_model()->GetVarUnits(var_name)));
-                        value_ptr = get_value_as_type(type, value);
-                    } catch (UnitsHelper::unit_conversion_exception &uce) {
-                        data_access::unit_error_log_key key{get_id(), var_map_alias, uce.provider_model_name, uce.provider_var_name, uce.what()};
-                        auto ret = data_access::unit_errors_reported.insert(key);
-                        bool new_error = ret.second;
-                        if (new_error) {
-                            std::stringstream ss;
-                            ss << "Unit conversion failure:"
-                               << " requester {'" << get_bmi_model()->get_model_name() << "' catchment '" << get_catchment_id()
-                               << "' variable '" << var_name << "'" << " (alias '" << var_map_alias << "')"
-                               << " units '" << get_bmi_model()->GetVarUnits(var_name) << "'}"
-                               << " provider {'" << uce.provider_model_name << "' source variable '" << uce.provider_var_name << "'"
-                               << " raw value " << uce.unconverted_values[0] << "}"
-                               << " message \"" << uce.what() << "\"\n";
-                            logging::warning(ss.str().c_str()); ss.str("");
-                        }
-                        value_ptr = get_value_as_type(type, uce.unconverted_values[0]);
-                    }
+                    //scalar value
+                    double value = UnitConversionMediator::convert(request,
+                        [&](const std::string& units) {
+                            return provider->get_value(CatchmentAggrDataSelector(get_catchment_id(), var_map_alias, model_epoch_time, t_delta, units));
+                        });
+                    value_ptr = get_value_as_type(type, value);
                 }
                 get_bmi_model()->SetValue(var_name, value_ptr.get());
             }

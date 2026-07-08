@@ -61,3 +61,41 @@ TEST_F(UnitsHelper_Test, TestConvertArrayDontModifyInputNoOp){
     ASSERT_EQ( expected,  data2);
     ASSERT_EQ( data.at(2), 3);
 }
+
+// An unconvertible pair throws a unit_conversion_exception carrying the units
+// and the input value, so a requester can report and fall back to it.
+TEST_F(UnitsHelper_Test, TestUnconvertiblePairThrowsAndKeepsValue){
+    try {
+        UnitsHelper::get_converted_value("m", 5.0, "kg");
+        FAIL() << "expected a unit_conversion_exception";
+    } catch (UnitsHelper::unit_conversion_exception& uce) {
+        ASSERT_EQ(uce.unconverted_values.size(), 1u);
+        EXPECT_DOUBLE_EQ(uce.unconverted_values[0], 5.0);
+        EXPECT_EQ(uce.provider_units, "m");
+        EXPECT_EQ(uce.to_units, "kg");
+    }
+}
+
+// Unparseable units likewise throw (rather than silently converting).
+TEST_F(UnitsHelper_Test, TestUnparseableUnitsThrow){
+    EXPECT_THROW(UnitsHelper::get_converted_value("not_a_unit", 1.0, "m"),
+                 UnitsHelper::unit_conversion_exception);
+}
+
+// Identical units short-circuit and return the value unchanged.
+TEST_F(UnitsHelper_Test, TestSameUnitsShortCircuit){
+    EXPECT_DOUBLE_EQ(5.0, UnitsHelper::get_converted_value("m", 5.0, "m"));
+}
+
+// The none-ish spellings are all treated as the dimensionless unit "1", and a
+// none-ish requested output against real input units passes the value through.
+TEST_F(UnitsHelper_Test, TestNoneIshTreatedAsDimensionless){
+    for (const std::string& noneish : {std::string(""), std::string("none"),
+                                       std::string("unitless"), std::string("dimensionless"),
+                                       std::string("-")}) {
+        EXPECT_DOUBLE_EQ(5.0, UnitsHelper::get_converted_value(noneish, 5.0, "1"))
+            << "input units '" << noneish << "' should be dimensionless";
+        EXPECT_DOUBLE_EQ(5.0, UnitsHelper::get_converted_value("m", 5.0, noneish))
+            << "none-ish requested output '" << noneish << "' should pass through";
+    }
+}
